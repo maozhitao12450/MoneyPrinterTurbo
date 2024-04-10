@@ -27,6 +27,8 @@ except Exception as e:
 app = _cfg.get("app", {})
 whisper = _cfg.get("whisper", {})
 pexels = _cfg.get("pexels", {})
+baidu = _cfg.get("baidu", {})
+baidufanyi = _cfg.get("baidufanyi", {})
 
 hostname = socket.gethostname()
 

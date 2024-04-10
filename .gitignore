@@ -9,3 +9,5 @@
 /app/utils/__pycache__/
 /*/__pycache__/*
 /app/controllers/__pycache__/*
+/app/controllers/v1/__pycache__
+/resource/pic

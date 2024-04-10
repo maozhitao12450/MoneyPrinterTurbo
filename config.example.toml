@@ -157,3 +157,9 @@
         ### Doc: https://requests.readthedocs.io/en/latest/user/advanced/#proxies
         # http = "http://10.10.1.10:3128"
         # https = "http://10.10.1.10:1080"
+
+[baidu]
+    ## 用于对下载的视频的图片进行分析，得到图片的内容， 用于判断是否和台词一致
+    APP_ID = "" # 你的 App ID
+    API_KEY = "" # 你的 Api Key
+    SECRET_KEY = "" 你的 Secret Key

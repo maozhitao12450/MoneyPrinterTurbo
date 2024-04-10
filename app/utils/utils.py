@@ -174,3 +174,16 @@ def split_string_by_punctuations(s):
 def md5(text):
     import hashlib
     return hashlib.md5(text.encode('utf-8')).hexdigest()
+
+from app.utils import baidu_material_generate_utils
+
+def advanced_general_url(url):
+    return baidu_material_generate_utils.advanced_general_url(url)
+
+def read_json(path):
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def write_json(path, data):
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)

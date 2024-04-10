@@ -246,12 +246,59 @@ Please note that you must use English for generating video search terms; Chinese
     logger.success(f"completed: \n{search_terms}")
     return search_terms
 
+from app.models.schema import MaterialInfo
+# 检查是否相关
+def generate_if_relation(video_items: list[MaterialInfo],word) -> bool:
+    prompt_prefix = f"""
+If you would like me to return only a list of Boolean values, such as `[true, false, true, false]`, representing the relevance of the search term to each list using fuzzy matching, you can frame your question as follows:
+
+**Please translate the following search term into Chinese and, utilizing a fuzzy matching methodology, determine its relevance to each of the provided lists. Present the results as a list of Boolean values, where `true` signifies that the search term has conceptual or partial relevance to the words in the corresponding list and `false` indicates otherwise.**
+if true result is less than 30%, try set most nearly item true
+Now, provide the search term and lists as before:
+
+**Search Term**: {word}
+
+**Lists**:
+"""
+    prompt_main = ""
+    for index,video_item in enumerate(video_items):
+        prompt_main+=f"{index}.{str(video_item.key_word)}\n"
+    prompt_suffix = f"""
+        please only return result like : [true,false,true]
+        please only return the Relevance Results
+    """.strip()
+    response = _generate_response(prompt_prefix+prompt_main+prompt_suffix)
+    search_terms = []
+    try:
+        response = response.replace("True","true").replace("False","false")
+        search_terms = json.loads(response)
+        if not isinstance(search_terms, list) or not all(isinstance(term, bool) for term in search_terms):
+            raise ValueError("response is not a list of booleans.")
+
+    except (json.JSONDecodeError, ValueError):
+        logger.warning(f"gpt returned an unformatted response. attempting to clean...")
+        # Attempt to extract list-like string and convert to list
+        match = re.search(r'\[[false|true|,|\s*]+\]', response)
+        if match:
+            try:
+                search_terms = json.loads(match.group())
+            except json.JSONDecodeError:
+                logger.error(f"could not parse response: {response}")
+                return []
+    logger.info(f'''
+    completed: \n{search_terms},
+    promotis: {prompt_prefix+prompt_main+prompt_suffix}
+    response:{response}
+    ''')
+    return search_terms
 
 if __name__ == "__main__":
-    video_subject = "生命的意义是什么"
-    script = generate_script(video_subject=video_subject, language="zh-CN", paragraph_number=1)
+    #video_subject = "生命的意义是什么"
+    #script = generate_script(video_subject=video_subject, language="zh-CN", paragraph_number=1)
     # print("######################")
     # print(script)
     # search_terms = generate_terms(video_subject=video_subject, video_script=script, amount=5)
     # print("######################")
     # print(search_terms)
+    isRelation= generate_if_relation(['玩具', '波斯猫'],'cat')
+    print(isRelation)

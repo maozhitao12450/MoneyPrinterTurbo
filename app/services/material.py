@@ -26,7 +26,7 @@ def round_robin_api_key():
     requested_count += 1
     return pexels_api_keys[requested_count % len(pexels_api_keys)]
 
-
+from app.services.llm import generate_if_relation
 def search_videos(search_term: str,
                   minimum_duration: int,
                   video_aspect: VideoAspect = VideoAspect.portrait,
@@ -51,7 +51,7 @@ def search_videos(search_term: str,
     try:
         r = requests.get(query_url, headers=headers, proxies=proxies, verify=False)
         response = r.json()
-        video_items = []
+        video_items: list[MaterialInfo] = []
         if "videos" not in response:
             logger.error(f"search videos failed: {response}")
             return video_items
@@ -68,15 +68,30 @@ def search_videos(search_term: str,
                 w = int(video["width"])
                 h = int(video["height"])
                 if w == video_width and h == video_height:
-                    item = MaterialInfo()
-                    item.provider = "pexels"
-                    item.url = video["link"]
-                    item.duration = duration
+                    item = MaterialInfo(
+                        link = video["link"],
+                        duration = duration,
+                        image = v.get("image"),
+                        search_item = search_term,
+                        provider = "pexels"
+                    )
                     video_items.append(item)
                     break
+        if len(video_items) != 0:
+            results = generate_if_relation(video_items,search_term)
+            # 移除不相关的
+            remove_items = []
+            for index,result in enumerate(results):
+                if not result:
+                    video_item = video_items[index]
+                    remove_items.append(video_item)
+                    logger.info(f"移除不相关的视频: {video_item.key_word}")
+            for item in remove_items:
+                video_items.remove(item)
         return video_items
     except Exception as e:
-        logger.error(f"search videos failed: {str(e)}")
+        # 打印异常堆栈
+        logger.error(f"search videos failed: {e}")
 
     return []
 
@@ -124,7 +139,7 @@ def download_videos(task_id: str,
                                     minimum_duration=max_clip_duration,
                                     video_aspect=video_aspect)
         logger.info(f"found {len(video_items)} videos for '{search_term}'")
-
+        
         for item in video_items:
             if item.url not in valid_video_urls:
                 valid_video_items.append(item)
