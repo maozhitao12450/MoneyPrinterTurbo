@@ -129,6 +129,12 @@
 
     material_directory = ""
 
+    ####### 分析视频图片与文案是否匹配
+    ### 支持列表如下
+    #### 1. baidu 这个需要配置baidu api key，可以搜索[baidu]
+    #### 2. openai
+    is_relationship_engine = "openai"
+
 
 [whisper]
     # Only effective when subtitle_provider is "whisper"

@@ -180,5 +180,8 @@ def read_json(path):
         return json.load(f)
 
 def write_json(path, data):
+    # 如果文件夹不存在，则创建文件夹
+    if not os.path.exists(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path))
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
