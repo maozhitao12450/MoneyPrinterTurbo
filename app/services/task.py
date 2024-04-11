@@ -117,6 +117,7 @@ def start(task_id, params: VideoParams):
                                                  video_contact_mode=params.video_concat_mode,
                                                  audio_duration=audio_duration * params.video_count,
                                                  max_clip_duration=max_clip_duration,
+                                                 video_script = video_script
                                                  )
     if not downloaded_videos:
         sm.update_task(task_id, state=const.TASK_STATE_FAILED)

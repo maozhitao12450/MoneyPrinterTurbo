@@ -41,13 +41,14 @@ class MaterialInfo:
     # 判断搜索词和视频图片的关键词是否相关，不开启判断的话那么认为相关
     search_key_relation: bool = True
 
-    def __init__(self,link,duration,image,search_item,provider) -> None:
+    def __init__(self,link="",duration="",image="",search_item="",provider="pexels") -> None:
         self.provider = provider
         self.url = link
         self.duration = duration
         self.image = image
         self.search_word = search_item
-        self.key_word = baidu_material_generate_utils.advanced_general_url(image)
+        # 设置关键词， 但是感觉效果不佳，暂时不使用
+        #self.key_word = baidu_material_generate_utils.advanced_general_url(image)
 
 # VoiceNames = [
 #     # zh-CN

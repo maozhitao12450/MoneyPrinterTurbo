@@ -250,8 +250,6 @@ from app.models.schema import MaterialInfo
 # 检查是否相关
 def generate_if_relation(video_items: list[MaterialInfo],word) -> bool:
     prompt_prefix = f"""
-If you would like me to return only a list of Boolean values, such as `[true, false, true, false]`, representing the relevance of the search term to each list using fuzzy matching, you can frame your question as follows:
-
 **Please translate the following search term into Chinese and, utilizing a fuzzy matching methodology, determine its relevance to each of the provided lists. Present the results as a list of Boolean values, where `true` signifies that the search term has conceptual or partial relevance to the words in the corresponding list and `false` indicates otherwise.**
 if true result is less than 30%, try set most nearly item true
 Now, provide the search term and lists as before:
@@ -292,6 +290,46 @@ Now, provide the search term and lists as before:
     ''')
     return search_terms
 
+def generate_if_video_picture_and_video_script_relation(video_items:list[MaterialInfo] ,video_script:str):
+    prompt_prefix = f"""
+** 分析一下Search Term的内容与，我提供的图片列表是否有关，如果有关，请返回true，否则返回false。**
+
+**Search Term**: {video_script}
+
+**Lists**:
+"""
+    prompt_main = ""
+    for index,video_item in enumerate(video_items):
+        prompt_main+=f"{index}.![{index}]({str(video_item.image)})\n"
+    prompt_suffix = f"""
+        please only return result like : [true,false,true]
+        please only return the Relevance Results
+    """.strip()
+    response = _generate_response(prompt_prefix+prompt_main+prompt_suffix)
+    search_terms = []
+    try:
+        response = response.replace("True","true").replace("False","false")
+        search_terms = json.loads(response)
+        if not isinstance(search_terms, list) or not all(isinstance(term, bool) for term in search_terms):
+            raise ValueError("response is not a list of booleans.")
+
+    except (json.JSONDecodeError, ValueError):
+        logger.warning(f"gpt returned an unformatted response. attempting to clean...")
+        # Attempt to extract list-like string and convert to list
+        match = re.search(r'\[[false|true|,|\s*]+\]', response)
+        if match:
+            try:
+                search_terms = json.loads(match.group())
+            except json.JSONDecodeError:
+                logger.error(f"could not parse response: {response}")
+                return []
+    logger.info(f'''
+    completed: \n{search_terms},
+    promotis: {prompt_prefix+prompt_main+prompt_suffix}
+    response:{response}
+    ''')
+    return search_terms
+
 if __name__ == "__main__":
     #video_subject = "生命的意义是什么"
     #script = generate_script(video_subject=video_subject, language="zh-CN", paragraph_number=1)
@@ -300,5 +338,9 @@ if __name__ == "__main__":
     # search_terms = generate_terms(video_subject=video_subject, video_script=script, amount=5)
     # print("######################")
     # print(search_terms)
-    isRelation= generate_if_relation(['玩具', '波斯猫'],'cat')
-    print(isRelation)
+    # isRelation= generate_if_relation(['玩具', '波斯猫'],'cat')
+    video_items = []
+    video_items.append(MaterialInfo(image="https://images.pexels.com/videos/5512609/pexels-photo-5512609.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=630"))
+    generate_if_video_picture_and_video_script_relation(video_items=video_items,video_script="春天是一個充滿希望與活力的季節，微風輕拂，陽光明媚。櫻花盛開，悄然綻放，美不勝收。溫暖的陽光讓人感到心曠神怡，仿佛重獲新生。在春天 裡，萬物復蘇，生機勃勃，讓人充滿期待與希望。這是一個讓人陶醉的季節，讓我們盡情享受春天的美好。")
+    # print(isRelation)
+    pass

@@ -26,10 +26,11 @@ def round_robin_api_key():
     requested_count += 1
     return pexels_api_keys[requested_count % len(pexels_api_keys)]
 
-from app.services.llm import generate_if_relation
+from app.services.llm import generate_if_video_picture_and_video_script_relation
 def search_videos(search_term: str,
                   minimum_duration: int,
                   video_aspect: VideoAspect = VideoAspect.portrait,
+                  video_script:str = ""
                   ) -> List[MaterialInfo]:
     aspect = VideoAspect(video_aspect)
     video_orientation = aspect.name
@@ -78,14 +79,14 @@ def search_videos(search_term: str,
                     video_items.append(item)
                     break
         if len(video_items) != 0:
-            results = generate_if_relation(video_items,search_term)
+            results = generate_if_video_picture_and_video_script_relation(video_items,video_script)
             # 移除不相关的
             remove_items = []
             for index,result in enumerate(results):
                 if not result:
                     video_item = video_items[index]
                     remove_items.append(video_item)
-                    logger.info(f"移除不相关的视频: {video_item.key_word}")
+                    logger.info(f"移除不相关的视频: {video_item.image}")
             for item in remove_items:
                 video_items.remove(item)
         return video_items
@@ -129,6 +130,7 @@ def download_videos(task_id: str,
                     video_contact_mode: VideoConcatMode = VideoConcatMode.random,
                     audio_duration: float = 0.0,
                     max_clip_duration: int = 5,
+                    video_script: str = ""
                     ) -> List[str]:
     valid_video_items = []
     valid_video_urls = []
@@ -137,7 +139,8 @@ def download_videos(task_id: str,
         # logger.info(f"searching videos for '{search_term}'")
         video_items = search_videos(search_term=search_term,
                                     minimum_duration=max_clip_duration,
-                                    video_aspect=video_aspect)
+                                    video_aspect=video_aspect,
+                                    video_script = video_script)
         logger.info(f"found {len(video_items)} videos for '{search_term}'")
         
         for item in video_items:
@@ -179,4 +182,4 @@ def download_videos(task_id: str,
 
 
 if __name__ == "__main__":
-    download_videos("test123", ["cat"], audio_duration=100)
+    download_videos("test123", ["cat"], audio_duration=100,video_script="可爱的小猫")
