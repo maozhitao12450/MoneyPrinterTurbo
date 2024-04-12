@@ -292,7 +292,7 @@ Now, provide the search term and lists as before:
 
 def generate_if_video_picture_and_video_script_relation(video_items:list[MaterialInfo] ,video_script:str):
     prompt_prefix = f"""
-** 分析一下Search Term的内容与，我提供的图片列表是否有关，如果有关，请返回true，否则返回false。**
+** 分析一下Search Term的内容与，我提供的图片列表是否有关，如果有关，请返回true，否则返回false。必须返回长度为{len(video_items)}的结果**
 
 **Search Term**: {video_script}
 
